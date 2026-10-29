@@ -20,7 +20,8 @@ export default function Calendar() {
   const [sel, setSel] = useState(ymd(new Date()));
   const [events, setEvents] = useState<Ev[]>([]);
   const [show, setShow] = useState({ me: true, partner: true });
-  const [adding, setAdding] = useState(false);
+  // null = 닫힘, 'new' = 새 일정, Ev = 수정
+  const [editing, setEditing] = useState<Ev | 'new' | null>(null);
 
   const from = ymd(new Date(month.getFullYear(), month.getMonth() - 1, 20));
   const to = ymd(new Date(month.getFullYear(), month.getMonth() + 1, 15));
@@ -88,40 +89,42 @@ export default function Calendar() {
           {dayEvents.map(e => {
             const o = owner(e);
             return (
-              <View key={e.id} style={s.ev}>
+              <Pressable key={e.id} style={s.ev} onPress={() => setEditing(e)}>
                 <View style={[s.dot, { backgroundColor: whoColor[o] }]} />
                 <View style={{ flex: 1 }}>
                   <T>{e.title}</T>
                   <T style={{ fontSize: 12, color: colors.inkSoft }}>{nameOf(o)} · {e.start_time ? `${hhmm(e.start_time)}${e.end_time ? '–' + hhmm(e.end_time) : ''}` : '하루 종일'}</T>
                 </View>
                 <Pressable hitSlop={10} onPress={() => remove(e.id)}><Text style={{ color: colors.inkSoft }}>✕</Text></Pressable>
-              </View>
+              </Pressable>
             );
           })}
         </View>
       </ScrollView>
 
-      <View style={s.fab}><Button label="＋ 일정 추가" kind="pink" onPress={() => setAdding(true)} /></View>
+      <View style={s.fab}><Button label="＋ 일정 추가" kind="pink" onPress={() => setEditing('new')} /></View>
 
-      <Modal visible={adding} transparent animationType="slide" onRequestClose={() => setAdding(false)}>
-        <AddEvent
+      <Modal visible={!!editing} transparent animationType="slide" onRequestClose={() => setEditing(null)}>
+        {editing && <EventSheet
           date={sel}
+          event={editing === 'new' ? undefined : editing}
           meId={me.id} meName={me.name} partnerId={partner?.id} partnerName={partner?.name}
           coupleId={me.couple_id}
-          onClose={() => setAdding(false)}
-          onSaved={date => { setAdding(false); setSel(date); const d = fromYmd(date); setMonth(new Date(d.getFullYear(), d.getMonth(), 1)); load(); }}
-        />
+          onClose={() => setEditing(null)}
+          onSaved={date => { setEditing(null); setSel(date); const d = fromYmd(date); setMonth(new Date(d.getFullYear(), d.getMonth(), 1)); load(); }}
+        />}
       </Modal>
     </Screen>
   );
 }
 
-function AddEvent(p: { date: string; meId: string; meName: string; partnerId?: string; partnerName?: string; coupleId: string; onClose: () => void; onSaved: (date: string) => void }) {
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState(p.date);
-  const [startT, setStartT] = useState('');
-  const [endT, setEndT] = useState('');
-  const [tags, setTags] = useState<string[]>([p.meId]);
+function EventSheet(p: { date: string; event?: Ev; meId: string; meName: string; partnerId?: string; partnerName?: string; coupleId: string; onClose: () => void; onSaved: (date: string) => void }) {
+  const ev = p.event;
+  const [title, setTitle] = useState(ev?.title ?? '');
+  const [date, setDate] = useState(ev?.date ?? p.date);
+  const [startT, setStartT] = useState(hhmm(ev?.start_time ?? null));
+  const [endT, setEndT] = useState(hhmm(ev?.end_time ?? null));
+  const [tags, setTags] = useState<string[]>(ev?.tags ?? [p.meId]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -130,10 +133,10 @@ function AddEvent(p: { date: string; meId: string; meName: string; partnerId?: s
   const save = async () => {
     if (startT && endT && endT <= startT) return setError('끝나는 시간이 시작보다 늦어야 해요');
     setLoading(true);
-    const { error } = await supabase.from('events').insert({
-      couple_id: p.coupleId, created_by: p.meId, title: title.trim(), date,
-      start_time: startT || null, end_time: endT || null, tags,
-    });
+    const fields = { title: title.trim(), date, start_time: startT || null, end_time: (startT && endT) || null, tags };
+    const { error } = ev
+      ? await supabase.from('events').update(fields).eq('id', ev.id)
+      : await supabase.from('events').insert({ ...fields, couple_id: p.coupleId, created_by: p.meId });
     setLoading(false);
     if (error) return setError(error.message);
     p.onSaved(date);
@@ -142,7 +145,7 @@ function AddEvent(p: { date: string; meId: string; meName: string; partnerId?: s
   return (
     <View style={s.backdrop}>
       <ScrollView style={s.sheet} contentContainerStyle={{ gap: 12 }}>
-        <Text style={s.sheetTitle}>새 일정</Text>
+        <Text style={s.sheetTitle}>{ev ? '일정 수정' : '새 일정'}</Text>
         <Field label="제목" value={title} onChangeText={setTitle} maxLength={30} />
         <DateStepper value={date} onChange={setDate} />
         <TimePicker label="시작" value={startT} onChange={setStartT} />
