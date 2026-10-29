@@ -1,17 +1,19 @@
 import { Redirect, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DateStepper, TimePicker } from '@/components/pickers';
-import { Button, Chip, Field, Header, Screen, T } from '@/components/ui';
+import { Glow } from '@/components/glow';
+import { Button, Chip, Field, Header, Rule, Screen, Sheet, Stepper, T } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { fromYmd, ymd } from '@/lib/date';
 import { useRealtime } from '@/lib/realtime';
 import { supabase } from '@/lib/supabase';
-import { colors, fonts, sticker, whoColor } from '@/lib/theme';
+import { colors, fonts, whoColor } from '@/lib/theme';
 
 type Ev = { id: string; title: string; date: string; start_time: string | null; end_time: string | null; tags: string[] };
-const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+const WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const gingham = require('@/assets/images/gingham.png');
 const hhmm = (t: string | null) => (t ? t.slice(0, 5) : '');
 
 export default function Calendar() {
@@ -51,29 +53,30 @@ export default function Calendar() {
   };
 
   return (
-    <Screen>
-      <Header title="Calendar" />
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
-        <View style={s.nav}>
-          <Pressable style={s.navBtn} onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}><Text style={s.navTxt}>‹</Text></Pressable>
-          <T>{month.getFullYear()}. {month.getMonth() + 1}</T>
-          <Pressable style={s.navBtn} onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}><Text style={s.navTxt}>›</Text></Pressable>
-        </View>
+    <Screen background={<Glow color="pink" style={{ top: 20, right: -120 }} />}>
+      <Header label="02" title="Calendar" />
+      <ScrollView contentContainerStyle={{ paddingBottom: 130 }} showsVerticalScrollIndicator={false}>
+        <Stepper
+          label={month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          onPrev={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+          onNext={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+        />
         <View style={s.chips}>
           <Chip label={me.name || '나'} color={whoColor.me} on={show.me} onPress={() => setShow({ ...show, me: !show.me })} />
           <Chip label={partner?.name || '상대'} color={whoColor.partner} on={show.partner} onPress={() => setShow({ ...show, partner: !show.partner })} />
         </View>
 
-        <View style={s.week}>{WEEK.map(w => <Text key={w} style={s.weekTxt}>{w}</Text>)}</View>
+        <View style={s.week}>{WEEK.map((w, i) => <Text key={i} style={s.weekTxt}>{w}</Text>)}</View>
+        <Rule />
         <View style={s.grid}>
           {days.map(d => {
             const key = ymd(d);
             const out = d.getMonth() !== month.getMonth();
             const list = visible.filter(e => e.date === key);
             return (
-              <Pressable key={key} onPress={() => setSel(key)} style={[s.day, out && { opacity: 0.3 }, key === sel && s.sel]}>
-                <View style={[s.num, key === today && { backgroundColor: colors.pink }]}>
-                  <Text style={[s.numTxt, key === today && { color: colors.white }]}>{d.getDate()}</Text>
+              <Pressable key={key} onPress={() => setSel(key)} style={[s.day, out && { opacity: 0.3 }]}>
+                <View style={[s.num, key === today && { backgroundColor: colors.aquaSoft }, key === sel && s.sel]}>
+                  <Text style={s.numTxt}>{d.getDate()}</Text>
                 </View>
                 {list.slice(0, 3).map(e => (
                   <Text key={e.id} numberOfLines={1} style={[s.bar, { backgroundColor: whoColor[owner(e)] }]}>{e.title}</Text>
@@ -83,26 +86,34 @@ export default function Calendar() {
           })}
         </View>
 
-        <View style={{ gap: 8, marginTop: 16 }}>
-          {owners.has('me') && owners.has('partner') && <T style={s.hint}>둘 다 일정이 있는 날이에요 ♡</T>}
-          {!dayEvents.length && <T style={s.hint}>일정이 없어요</T>}
+        <View style={{ marginTop: 24 }}>
+          <Text style={s.dayTitle}>{fromYmd(sel).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</Text>
+          {owners.has('me') && owners.has('partner') && <T style={s.hint}>둘 다 일정이 있는 날이에요</T>}
+          {!dayEvents.length && <T style={s.hint}>아직 비어 있는 하루예요</T>}
+          <Rule />
           {dayEvents.map(e => {
             const o = owner(e);
             return (
-              <Pressable key={e.id} style={s.ev} onPress={() => setEditing(e)}>
-                <View style={[s.dot, { backgroundColor: whoColor[o] }]} />
-                <View style={{ flex: 1 }}>
-                  <T>{e.title}</T>
-                  <T style={{ fontSize: 12, color: colors.inkSoft }}>{nameOf(o)} · {e.start_time ? `${hhmm(e.start_time)}${e.end_time ? '–' + hhmm(e.end_time) : ''}` : '하루 종일'}</T>
-                </View>
-                <Pressable hitSlop={10} onPress={() => remove(e.id)}><Text style={{ color: colors.inkSoft }}>✕</Text></Pressable>
-              </Pressable>
+              <View key={e.id}>
+                <Pressable style={s.ev} onPress={() => setEditing(e)}>
+                  <Text style={s.evTime}>{e.start_time ? hhmm(e.start_time) : 'all day'}</Text>
+                  {o === 'both'
+                    ? <Image source={gingham} resizeMode="repeat" style={s.dot} />
+                    : <View style={[s.dot, { backgroundColor: whoColor[o] }]} />}
+                  <View style={{ flex: 1 }}>
+                    <T>{e.title}</T>
+                    <T style={{ fontSize: 12, color: colors.inkSoft }}>{nameOf(o)}{e.end_time ? ` · ~${hhmm(e.end_time)}` : ''}</T>
+                  </View>
+                  <Pressable hitSlop={12} onPress={() => remove(e.id)}><Text style={s.del}>×</Text></Pressable>
+                </Pressable>
+                <Rule />
+              </View>
             );
           })}
         </View>
       </ScrollView>
 
-      <View style={s.fab}><Button label="＋ 일정 추가" kind="pink" onPress={() => setEditing('new')} /></View>
+      <View style={s.fab}><Button label="일정 더하기" kind="pink" onPress={() => setEditing('new')} /></View>
 
       <Modal visible={!!editing} transparent animationType="slide" onRequestClose={() => setEditing(null)}>
         {editing && <EventSheet
@@ -143,9 +154,8 @@ function EventSheet(p: { date: string; event?: Ev; meId: string; meName: string;
   };
 
   return (
-    <View style={s.backdrop}>
-      <ScrollView style={s.sheet} contentContainerStyle={{ gap: 12 }}>
-        <Text style={s.sheetTitle}>{ev ? '일정 수정' : '새 일정'}</Text>
+    <Sheet scroll>
+        <Text style={s.sheetTitle}>{ev ? 'Edit' : 'New plan'}</Text>
         <Field label="제목" value={title} onChangeText={setTitle} maxLength={30} />
         <DateStepper value={date} onChange={setDate} />
         <TimePicker label="시작" value={startT} onChange={setStartT} />
@@ -160,29 +170,26 @@ function EventSheet(p: { date: string; event?: Ev; meId: string; meName: string;
           <Button label="취소" kind="ghost" onPress={p.onClose} />
           <Button label="저장" onPress={save} loading={loading} disabled={!title.trim()} />
         </View>
-      </ScrollView>
-    </View>
+    </Sheet>
   );
 }
 
 const s = StyleSheet.create({
-  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, marginBottom: 12 },
-  navBtn: { ...sticker, shadowOffset: { width: 0, height: 2 }, width: 34, height: 34, borderRadius: 17, backgroundColor: colors.butter, alignItems: 'center', justifyContent: 'center' },
-  navTxt: { fontSize: 20, color: colors.ink },
-  chips: { flexDirection: 'row', gap: 8, justifyContent: 'center', marginBottom: 14 },
-  week: { flexDirection: 'row', marginBottom: 6 },
-  weekTxt: { flex: 1, textAlign: 'center', fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  day: { width: `${100 / 7}%`, minHeight: 66, padding: 2, gap: 2, borderRadius: 12, borderWidth: 2, borderColor: 'transparent' },
-  sel: { borderColor: colors.ink, backgroundColor: colors.white },
-  num: { alignSelf: 'center', width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  numTxt: { fontFamily: fonts.body, fontSize: 12, color: colors.ink },
-  bar: { fontFamily: fonts.body, fontSize: 9, color: colors.ink, borderRadius: 6, paddingHorizontal: 3, overflow: 'hidden' },
-  hint: { textAlign: 'center', color: colors.inkSoft, fontSize: 14 },
-  ev: { ...sticker, shadowOffset: { width: 0, height: 3 }, backgroundColor: colors.white, borderRadius: 20, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: colors.ink },
-  fab: { position: 'absolute', bottom: 24, alignSelf: 'center' },
-  backdrop: { flex: 1, backgroundColor: 'rgba(90,80,70,0.35)', justifyContent: 'flex-end' },
-  sheet: { ...sticker, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: colors.stone, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 36, width: '100%', maxWidth: 480, maxHeight: '90%', alignSelf: 'center', flexGrow: 0 },
-  sheetTitle: { fontFamily: fonts.body, fontSize: 26, color: colors.ink, transform: [{ rotate: '-2deg' }] },
+  chips: { flexDirection: 'row', gap: 8, justifyContent: 'center', marginBottom: 18 },
+  week: { flexDirection: 'row', marginBottom: 8 },
+  weekTxt: { flex: 1, textAlign: 'center', fontFamily: fonts.displayItalic, fontSize: 13, color: colors.inkSoft },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 6 },
+  day: { width: `${100 / 7}%`, minHeight: 64, paddingVertical: 2, paddingHorizontal: 1, gap: 2 },
+  sel: { borderWidth: 1, borderColor: colors.ink },
+  num: { alignSelf: 'center', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  numTxt: { fontFamily: fonts.display, fontSize: 15, color: colors.ink },
+  bar: { fontFamily: fonts.body, fontSize: 9, color: colors.ink, borderRadius: 999, paddingHorizontal: 4, overflow: 'hidden' },
+  dayTitle: { fontFamily: fonts.displayItalic, fontSize: 22, color: colors.ink, marginBottom: 4 },
+  hint: { color: colors.inkSoft, fontSize: 13, marginBottom: 10 },
+  ev: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
+  evTime: { fontFamily: fonts.displayItalic, fontSize: 15, color: colors.inkSoft, width: 52 },
+  dot: { width: 12, height: 12, borderRadius: 6, overflow: 'hidden' },
+  del: { fontFamily: fonts.display, fontSize: 22, color: colors.inkSoft },
+  fab: { position: 'absolute', bottom: 28, alignSelf: 'center' },
+  sheetTitle: { fontFamily: fonts.display, fontSize: 32, color: colors.ink },
 });
