@@ -8,7 +8,7 @@
     "scheme": "uram",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.uram.app",
       "infoPlist": {
         "NSCameraUsageDescription": "한 시간마다 짧은 일상 영상을 찍기 위해 카메라를 사용해요",
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#ECE6DF",
+        "backgroundColor": "#FFE3EC",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -35,9 +35,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#ECE6DF",
+          "backgroundColor": "#FDF3EC",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 180
         }
       ],
       [
