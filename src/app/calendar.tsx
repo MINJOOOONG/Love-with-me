@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { DateStepper, TimePicker } from '@/components/pickers';
 import { Button, Chip, Field, Header, Screen, T } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { fromYmd, ymd } from '@/lib/date';
@@ -12,7 +13,6 @@ import { colors, fonts, sticker, whoColor } from '@/lib/theme';
 type Ev = { id: string; title: string; date: string; start_time: string | null; end_time: string | null; tags: string[] };
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 const hhmm = (t: string | null) => (t ? t.slice(0, 5) : '');
-const validTime = (t: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
 
 export default function Calendar() {
   const { session, me, partner } = useAuth();
@@ -128,8 +128,7 @@ function AddEvent(p: { date: string; meId: string; meName: string; partnerId?: s
   const toggle = (id: string) => setTags(t => (t.includes(id) ? (t.length > 1 ? t.filter(x => x !== id) : t) : [...t, id]));
 
   const save = async () => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return setError('날짜는 2026-10-29 형식으로 적어주세요');
-    if ((startT && !validTime(startT)) || (endT && !validTime(endT))) return setError('시간은 14:30 형식으로 적어주세요');
+    if (startT && endT && endT <= startT) return setError('끝나는 시간이 시작보다 늦어야 해요');
     setLoading(true);
     const { error } = await supabase.from('events').insert({
       couple_id: p.coupleId, created_by: p.meId, title: title.trim(), date,
@@ -142,14 +141,12 @@ function AddEvent(p: { date: string; meId: string; meName: string; partnerId?: s
 
   return (
     <View style={s.backdrop}>
-      <View style={s.sheet}>
+      <ScrollView style={s.sheet} contentContainerStyle={{ gap: 12 }}>
         <Text style={s.sheetTitle}>새 일정</Text>
         <Field label="제목" value={title} onChangeText={setTitle} maxLength={30} />
-        <Field label="날짜" value={date} onChangeText={setDate} placeholder="2026-10-29" />
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1 }}><Field label="시작" value={startT} onChangeText={setStartT} placeholder="14:00" maxLength={5} /></View>
-          <View style={{ flex: 1 }}><Field label="끝" value={endT} onChangeText={setEndT} placeholder="16:00" maxLength={5} /></View>
-        </View>
+        <DateStepper value={date} onChange={setDate} />
+        <TimePicker label="시작" value={startT} onChange={setStartT} />
+        {!!startT && <TimePicker label="끝" value={endT} onChange={setEndT} />}
         <T style={{ fontSize: 13, color: colors.inkSoft }}>태그 · 둘 다 고르면 함께하는 일정</T>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Chip label={p.meName || '나'} color={whoColor.me} on={tags.includes(p.meId)} onPress={() => toggle(p.meId)} />
@@ -160,7 +157,7 @@ function AddEvent(p: { date: string; meId: string; meName: string; partnerId?: s
           <Button label="취소" kind="ghost" onPress={p.onClose} />
           <Button label="저장" onPress={save} loading={loading} disabled={!title.trim()} />
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -183,6 +180,6 @@ const s = StyleSheet.create({
   dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: colors.ink },
   fab: { position: 'absolute', bottom: 24, alignSelf: 'center' },
   backdrop: { flex: 1, backgroundColor: 'rgba(90,80,70,0.35)', justifyContent: 'flex-end' },
-  sheet: { ...sticker, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: colors.stone, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 36, gap: 12, width: '100%', maxWidth: 480, alignSelf: 'center' },
+  sheet: { ...sticker, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: colors.stone, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 36, width: '100%', maxWidth: 480, maxHeight: '90%', alignSelf: 'center', flexGrow: 0 },
   sheetTitle: { fontFamily: fonts.display, fontSize: 28, color: colors.ink, transform: [{ rotate: '-2deg' }] },
 });
