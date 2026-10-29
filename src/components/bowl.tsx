@@ -15,16 +15,26 @@ function Dimsum({ size, style, delay = 0 }: { size: number; style: object; delay
     return () => clearTimeout(t);
   }, [delay, y]);
   const anim = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
-  const arm = size * 0.62;
+  const leaf = size * 0.46;
   return (
     <Animated.View style={[{ position: 'absolute', width: size, height: size }, style, anim]}>
-      {/* 네 갈래 피 */}
-      {[0, 90].map(r => (
-        <View key={r} style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', transform: [{ rotate: `${r + 45}deg` }] }]}>
-          <LinearGradient colors={['#b5e6e3', colors.mint, '#74c2bf']} style={{ width: arm * 0.34, height: size, borderRadius: size }} />
-          <LinearGradient colors={['#b5e6e3', colors.mint, '#74c2bf']} style={{ position: 'absolute', width: size, height: arm * 0.34, borderRadius: size }} />
+      {/* 네 귀퉁이가 뾰족하게 접힌 크리스탈 피 */}
+      {[0, 90, 180, 270].map(r => (
+        <View key={r} style={[StyleSheet.absoluteFill, { transform: [{ rotate: `${r}deg` }] }]}>
+          <LinearGradient
+            colors={['#c4ece9', colors.mint, '#7cc9c4']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              position: 'absolute', left: size / 2 - leaf * 0.12, top: size / 2 - leaf * 0.12, width: leaf, height: leaf,
+              borderTopRightRadius: leaf * 0.9, borderBottomLeftRadius: leaf * 0.9, borderWidth: 1.5, borderColor: colors.ink + '55', opacity: 0.95,
+            }}
+          />
         </View>
       ))}
+      <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+        <LinearGradient colors={['#d9f4f2', colors.mint]} style={{ width: size * 0.5, height: size * 0.5, borderRadius: size }} />
+      </View>
       {/* 꽃잎 */}
       {[0, 72, 144, 216, 288].map(r => (
         <View key={r} style={[StyleSheet.absoluteFill, { alignItems: 'center', transform: [{ rotate: `${r}deg` }] }]}>
