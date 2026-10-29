@@ -4,6 +4,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { DayFilm, type FilmItem } from '@/components/day-film';
 import { Button, Chip, Header, Screen, T } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { type Clip, clipUrl, deleteClip, listClips, uploadClip } from '@/lib/clips';
@@ -19,6 +20,7 @@ export default function Selog() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [playing, setPlaying] = useState<{ clip: Clip; url: string } | null>(null);
+  const [film, setFilm] = useState<FilmItem[] | null>(null);
 
   const date = ymd(day);
   const isToday = date === ymd(new Date());
@@ -59,6 +61,17 @@ export default function Selog() {
 
   const visible = (c: Clip) => (c.user_id === me.id ? show.me : show.partner);
 
+  const playDay = async () => {
+    const list = clips.filter(visible).sort((a, b) => a.hour - b.hour || (a.user_id === me.id ? -1 : 1));
+    const items = await Promise.all(list.map(async c => ({
+      url: await clipUrl(c.path),
+      label: `${pad(c.hour)}:00 · ${c.user_id === me.id ? me.name : partner?.name ?? '상대'}`,
+      color: c.user_id === me.id ? whoColor.me : whoColor.partner,
+    })));
+    setFilm(items);
+  };
+  const hasClips = clips.some(visible);
+
   return (
     <Screen>
       <Header title="Selog" />
@@ -72,6 +85,11 @@ export default function Selog() {
         <Chip label={partner?.name || '상대'} color={whoColor.partner} on={show.partner} onPress={() => setShow({ ...show, partner: !show.partner || !show.me })} />
       </View>
       {!!error && <T style={{ color: '#d0768a', textAlign: 'center', marginBottom: 8 }}>{error}</T>}
+      {hasClips && (
+        <View style={{ alignItems: 'center', marginBottom: 12 }}>
+          <Button label="▶ 하루 이어보기" kind="ghost" onPress={playDay} />
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={s.grid}>
         {Array.from({ length: 24 }, (_, h) => {
@@ -98,6 +116,10 @@ export default function Selog() {
           {busy ? <ActivityIndicator color={colors.pink} /> : <Button label="● 지금 기록하기" kind="pink" onPress={record} />}
         </View>
       )}
+
+      <Modal visible={!!film} transparent animationType="slide" onRequestClose={() => setFilm(null)}>
+        {film && film.length > 0 && <DayFilm items={film} onClose={() => setFilm(null)} />}
+      </Modal>
 
       <Modal visible={!!playing} transparent animationType="slide" onRequestClose={() => setPlaying(null)}>
         {playing && (
