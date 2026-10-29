@@ -8,6 +8,7 @@ import { Button, Chip, Header, Screen, T } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { type Clip, clipUrl, deleteClip, listClips, uploadClip } from '@/lib/clips';
 import { addDays, pad, ymd } from '@/lib/date';
+import { useRealtime } from '@/lib/realtime';
 import { colors, fonts, sticker, whoColor } from '@/lib/theme';
 
 export default function Selog() {
@@ -27,6 +28,7 @@ export default function Selog() {
     listClips(date).then(setClips).catch(e => setError(e.message));
   }, [date]);
   useFocusEffect(load);
+  useRealtime('clips', me?.couple_id, load);
 
   if (!session || !me?.couple_id) return <Redirect href="/" />;
 
