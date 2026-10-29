@@ -55,9 +55,13 @@ create policy "insert me" on public.profiles for insert with check (id = auth.ui
 create policy "update me" on public.profiles for update using (id = auth.uid())
   with check (id = auth.uid() and couple_id is not distinct from public.my_couple());
 
-create policy "couple events" on public.events for all
-  using (couple_id = public.my_couple())
+create policy "couple events read" on public.events for select using (couple_id = public.my_couple());
+create policy "couple events add" on public.events for insert
   with check (couple_id = public.my_couple() and created_by = auth.uid());
+-- 두 사람 모두 서로의 일정을 고치고 지울 수 있음
+create policy "couple events edit" on public.events for update
+  using (couple_id = public.my_couple()) with check (couple_id = public.my_couple());
+create policy "couple events delete" on public.events for delete using (couple_id = public.my_couple());
 
 create policy "couple clips read" on public.clips for select using (couple_id = public.my_couple());
 create policy "my clips write" on public.clips for all
@@ -106,3 +110,7 @@ create policy "delete my clips" on storage.objects for delete
 
 -- 실시간 동기화: 상대가 올린 일정·영상이 바로 보이도록
 alter publication supabase_realtime add table public.events, public.clips;
+
+-- [2026-10-29 업데이트] 이미 스키마를 실행했다면 아래만 실행하세요 (일정 수정 허용)
+-- drop policy "couple events" on public.events;
+-- 그다음 위의 "couple events read/add/edit/delete" 네 줄을 실행
