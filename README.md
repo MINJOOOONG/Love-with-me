@@ -34,5 +34,5 @@ npx eas-cli@latest submit --platform ios
 Apple 개발자 계정(연 $99), Google Play 개발자 계정($25)이 필요해요.
 
 ## 폰트
-현재 Cherry Bomb One(영문) + Jua(한글). usemodify.com 폰트로 바꾸려면 `assets/fonts/` 에 파일을 넣고
+현재 Fraunces Light(영문) + 고운바탕(한글). usemodify.com 폰트로 바꾸려면 `assets/fonts/` 에 파일을 넣고
 `src/app/_layout.tsx` 의 `useFonts` 와 `src/lib/theme.ts` 의 `fonts` 를 바꾸면 돼요.

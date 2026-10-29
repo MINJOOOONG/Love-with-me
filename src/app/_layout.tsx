@@ -1,5 +1,5 @@
-import { CherryBombOne_400Regular } from '@expo-google-fonts/cherry-bomb-one';
-import { Jua_400Regular } from '@expo-google-fonts/jua';
+import { Fraunces_300Light, Fraunces_300Light_Italic } from '@expo-google-fonts/fraunces';
+import { GowunBatang_400Regular, GowunBatang_700Bold } from '@expo-google-fonts/gowun-batang';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -12,7 +12,7 @@ import { colors } from '@/lib/theme';
 SplashScreen.preventAutoHideAsync();
 
 function Root() {
-  const [fontsLoaded] = useFonts({ CherryBombOne_400Regular, Jua_400Regular });
+  const [fontsLoaded] = useFonts({ Fraunces_300Light, Fraunces_300Light_Italic, GowunBatang_400Regular, GowunBatang_700Bold });
   const { ready } = useAuth();
   const done = fontsLoaded && ready;
   useEffect(() => {
@@ -22,7 +22,7 @@ function Root() {
   return (
     <>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.stone }, animation: 'fade' }} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper }, animation: 'fade' }} />
     </>
   );
 }
