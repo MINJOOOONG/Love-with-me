@@ -184,5 +184,5 @@ const s = StyleSheet.create({
   fab: { position: 'absolute', bottom: 24, alignSelf: 'center' },
   backdrop: { flex: 1, backgroundColor: 'rgba(90,80,70,0.35)', justifyContent: 'flex-end' },
   sheet: { ...sticker, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: colors.stone, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 36, width: '100%', maxWidth: 480, maxHeight: '90%', alignSelf: 'center', flexGrow: 0 },
-  sheetTitle: { fontFamily: fonts.display, fontSize: 28, color: colors.ink, transform: [{ rotate: '-2deg' }] },
+  sheetTitle: { fontFamily: fonts.body, fontSize: 26, color: colors.ink, transform: [{ rotate: '-2deg' }] },
 });
