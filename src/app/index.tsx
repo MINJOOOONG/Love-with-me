@@ -1,16 +1,18 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ImageBackground, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Bowl } from '@/components/bowl';
-import { Button, Screen } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { isDemo, supabase } from '@/lib/supabase';
 import { colors, fonts } from '@/lib/theme';
 
+const stone = require('@/assets/images/stone.png');
+
 export default function Intro() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { session, me } = useAuth();
-  const size = Math.min(width * 0.8, 340);
+  const size = Math.min(width * 0.96, height * 0.5, 460);
 
   const start = async () => {
     if (isDemo && !session) {
@@ -22,24 +24,33 @@ export default function Intro() {
   };
 
   return (
-    <Screen style={s.wrap}>
-      <View style={{ alignItems: 'center', gap: 4 }}>
-        <Text style={s.logo}>2uram</Text>
-        <Text style={s.sub}>✦ our little day, together ✦</Text>
-      </View>
-      <Bowl size={size} />
-      <View style={{ alignItems: 'center', gap: 10 }}>
-        <Button label={isDemo ? '체험해보기' : '시작하기'} onPress={start} />
-        {isDemo && <Text style={s.warn}>체험 모드 · 예시 데이터로 둘러봐요</Text>}
-      </View>
-    </Screen>
+    <ImageBackground source={stone} resizeMode="repeat" style={s.bg}>
+      <SafeAreaView style={s.wrap}>
+        <View style={s.titleBox}>
+          <Text style={s.logo}>2uram</Text>
+          <Text style={s.sub}>crystal little days, together</Text>
+        </View>
+        <Bowl size={size} />
+        <View style={s.bottom}>
+          <Pressable onPress={start} style={({ pressed }) => [s.start, pressed && { opacity: 0.7 }]}>
+            <Text style={s.startTxt}>{isDemo ? '둘러보기' : '시작하기'}</Text>
+          </Pressable>
+          <Text style={s.credit}>{isDemo ? '체험 모드 · 예시 데이터로 보여드려요' : '01 · 우리 둘만의 하루'}</Text>
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
-const shadow = { textShadowColor: colors.pink, textShadowRadius: 0, textShadowOffset: { width: 3, height: 4 } };
+const shadow = { textShadowColor: 'rgba(80,68,56,0.35)', textShadowRadius: 12, textShadowOffset: { width: 0, height: 1 } };
 const s = StyleSheet.create({
-  wrap: { alignItems: 'center', justifyContent: 'center', gap: 36 },
-  logo: { fontFamily: fonts.display, fontSize: 68, color: colors.ink, letterSpacing: 1, transform: [{ rotate: '-4deg' }], ...shadow },
-  sub: { fontFamily: fonts.body, fontSize: 16, color: colors.inkSoft },
-  warn: { fontFamily: fonts.body, color: colors.inkSoft, fontSize: 13 },
+  bg: { flex: 1, backgroundColor: colors.stone },
+  wrap: { flex: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingHorizontal: 16 },
+  titleBox: { alignItems: 'center', gap: 2 },
+  logo: { fontFamily: fonts.display, fontSize: 72, color: colors.white, letterSpacing: 2, ...shadow },
+  sub: { fontFamily: fonts.displayItalic, fontSize: 19, color: colors.white, letterSpacing: 1, ...shadow },
+  bottom: { alignItems: 'center', gap: 12 },
+  start: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.9)', borderRadius: 999, paddingVertical: 13, paddingHorizontal: 40, backgroundColor: 'rgba(255,255,255,0.18)' },
+  startTxt: { fontFamily: fonts.body, fontSize: 15, color: colors.white, letterSpacing: 1, ...shadow },
+  credit: { fontFamily: fonts.body, fontSize: 11, color: 'rgba(255,255,255,0.85)', letterSpacing: 0.5 },
 });
