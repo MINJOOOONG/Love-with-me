@@ -5,6 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { Button, Chip, Field, Header, Screen, T } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { fromYmd, ymd } from '@/lib/date';
+import { useRealtime } from '@/lib/realtime';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, sticker, whoColor } from '@/lib/theme';
 
@@ -28,6 +29,7 @@ export default function Calendar() {
       .order('start_time', { nullsFirst: true }).then(({ data }) => setEvents((data as Ev[]) ?? []));
   }, [from, to]);
   useFocusEffect(load);
+  useRealtime('events', me?.couple_id, load);
 
   const owner = useCallback((e: Ev) => (e.tags.length > 1 ? 'both' : e.tags[0] === me?.id ? 'me' : 'partner') as keyof typeof whoColor, [me]);
   const visible = useMemo(() => events.filter(e => e.tags.some(t => (t === me?.id ? show.me : show.partner))), [events, show, me]);
