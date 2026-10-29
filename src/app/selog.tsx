@@ -57,18 +57,28 @@ export default function Selog() {
     }
   };
 
-  const open = async (clip: Clip) => setPlaying({ clip, url: await clipUrl(clip.path) });
+  const open = async (clip: Clip) => {
+    try {
+      setPlaying({ clip, url: await clipUrl(clip.path) });
+    } catch (e: any) {
+      setError(e.message ?? '영상을 불러오지 못했어요');
+    }
+  };
 
   const visible = (c: Clip) => (c.user_id === me.id ? show.me : show.partner);
 
   const playDay = async () => {
     const list = clips.filter(visible).sort((a, b) => a.hour - b.hour || (a.user_id === me.id ? -1 : 1));
-    const items = await Promise.all(list.map(async c => ({
-      url: await clipUrl(c.path),
-      label: `${pad(c.hour)}:00 · ${c.user_id === me.id ? me.name : partner?.name ?? '상대'}`,
-      color: c.user_id === me.id ? whoColor.me : whoColor.partner,
-    })));
-    setFilm(items);
+    try {
+      const items = await Promise.all(list.map(async c => ({
+        url: await clipUrl(c.path),
+        label: `${pad(c.hour)}:00 · ${c.user_id === me.id ? me.name : partner?.name ?? '상대'}`,
+        color: c.user_id === me.id ? whoColor.me : whoColor.partner,
+      })));
+      setFilm(items);
+    } catch (e: any) {
+      setError(e.message ?? '영상을 불러오지 못했어요');
+    }
   };
   const hasClips = clips.some(visible);
 
