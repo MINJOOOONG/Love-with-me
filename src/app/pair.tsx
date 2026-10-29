@@ -3,10 +3,11 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Glow } from '@/components/glow';
 import { Button, Field, Header, Screen, T } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { colors, fonts, sticker } from '@/lib/theme';
+import { colors, fonts } from '@/lib/theme';
 
 export default function Pair() {
   const { me, partner, refresh } = useAuth();
@@ -34,13 +35,13 @@ export default function Pair() {
   };
 
   return (
-    <Screen>
-      <Header title="Pair" />
+    <Screen background={<Glow style={{ top: 120, left: -140 }} />}>
+      <Header label="for two" title="Pair" />
       <View style={{ gap: 24 }}>
         <T style={{ color: colors.inkSoft }}>{me?.name}님, 한 사람이 초대코드를 만들고{'\n'}다른 사람이 그 코드를 입력하면 연결돼요.</T>
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>초대코드 만들기</Text>
+          <Text style={s.cardTitle}>i. 초대코드 만들기</Text>
           {code ? (
             <>
               <Text style={s.code} selectable>{code}</Text>
@@ -53,7 +54,7 @@ export default function Pair() {
         </View>
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>받은 코드 입력하기</Text>
+          <Text style={s.cardTitle}>ii. 받은 코드 입력하기</Text>
           <Field label="초대코드" value={input} onChangeText={setInput} autoCapitalize="characters" maxLength={6} />
           <Button label="연결하기" kind="pink" onPress={join} loading={loading} disabled={input.trim().length < 6} />
         </View>
@@ -64,7 +65,7 @@ export default function Pair() {
 }
 
 const s = StyleSheet.create({
-  card: { ...sticker, shadowOffset: { width: 0, height: 5 }, backgroundColor: colors.white, borderRadius: 28, padding: 20, gap: 12 },
-  cardTitle: { fontFamily: fonts.body, fontSize: 16, color: colors.ink },
-  code: { fontFamily: fonts.display, fontSize: 44, letterSpacing: 8, textAlign: 'center', color: colors.ink },
+  card: { paddingVertical: 20, gap: 14, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.ink + '40' },
+  cardTitle: { fontFamily: fonts.displayItalic, fontSize: 20, color: colors.ink },
+  code: { fontFamily: fonts.display, fontSize: 52, letterSpacing: 10, textAlign: 'center', color: colors.ink },
 });

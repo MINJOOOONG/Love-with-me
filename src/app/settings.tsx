@@ -29,8 +29,8 @@ export default function Settings() {
 
   return (
     <Screen>
-      <Header title="Settings" />
-      <View style={{ gap: 18 }}>
+      <Header label="etc." title="Settings" />
+      <View style={{ gap: 22 }}>
         <Field label="나의 이름" value={name} onChangeText={t => { setName(t); setSaved(false); }} maxLength={10} />
         <Button label={saved ? '저장했어요' : '이름 저장'} onPress={save} disabled={!name.trim()} />
         <T style={{ color: colors.inkSoft }}>연결된 사람 · {partner?.name ?? '아직 없어요'}{code ? `   (초대코드 ${code})` : ''}</T>
@@ -39,7 +39,7 @@ export default function Settings() {
           <Switch
             value={remind}
             disabled={!reminderSupported}
-            trackColor={{ true: colors.mint, false: '#ddd' }}
+            trackColor={{ true: colors.aqua, false: colors.line }}
             onValueChange={async v => setRemind(await setReminder(v))}
           />
         </View>

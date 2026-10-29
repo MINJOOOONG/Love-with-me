@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Glow } from '@/components/glow';
 import { Button, Field, Header, Screen, T } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts } from '@/lib/theme';
@@ -27,9 +28,9 @@ export default function Login() {
   };
 
   return (
-    <Screen>
-      <Header title={mode === 'in' ? 'Hello' : 'Welcome'} />
-      <View style={{ gap: 14 }}>
+    <Screen background={<Glow color="pink" style={{ top: 60, right: -130 }} />}>
+      <Header label={mode === 'in' ? 'sign in' : 'sign up'} title={mode === 'in' ? 'Hello again' : 'Welcome'} />
+      <View style={{ gap: 22 }}>
         {mode === 'up' && <Field label="이름" value={name} onChangeText={setName} maxLength={10} placeholder="상대에게 보일 이름" />}
         <Field label="이메일" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
         <Field label="비밀번호" value={password} onChangeText={setPassword} secureTextEntry placeholder="6자 이상" />
