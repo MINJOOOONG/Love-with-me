@@ -103,3 +103,6 @@ create policy "update my clips" on storage.objects for update
   using (bucket_id = 'clips' and (storage.foldername(name))[2] = auth.uid()::text);
 create policy "delete my clips" on storage.objects for delete
   using (bucket_id = 'clips' and (storage.foldername(name))[2] = auth.uid()::text);
+
+-- 실시간 동기화: 상대가 올린 일정·영상이 바로 보이도록
+alter publication supabase_realtime add table public.events, public.clips;
