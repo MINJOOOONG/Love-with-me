@@ -5,12 +5,13 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DayFilm, type FilmItem } from '@/components/day-film';
-import { Button, Chip, Header, Screen, T } from '@/components/ui';
+import { Glow } from '@/components/glow';
+import { Button, Chip, Header, Screen, Sheet, Stepper, T } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { type Clip, clipUrl, deleteClip, listClips, uploadClip } from '@/lib/clips';
 import { addDays, pad, ymd } from '@/lib/date';
 import { useRealtime } from '@/lib/realtime';
-import { colors, fonts, sticker, whoColor } from '@/lib/theme';
+import { colors, fonts, whoColor } from '@/lib/theme';
 
 export default function Selog() {
   const { session, me, partner } = useAuth();
@@ -83,13 +84,14 @@ export default function Selog() {
   const hasClips = clips.some(visible);
 
   return (
-    <Screen>
-      <Header title="Selog" />
-      <View style={s.nav}>
-        <Pressable style={s.navBtn} onPress={() => setDay(addDays(day, -1))}><Text style={s.navTxt}>‹</Text></Pressable>
-        <T>{day.getMonth() + 1}월 {day.getDate()}일</T>
-        <Pressable style={s.navBtn} onPress={() => setDay(addDays(day, 1))}><Text style={s.navTxt}>›</Text></Pressable>
-      </View>
+    <Screen background={<Glow style={{ top: 40, right: -110 }} />}>
+      <Header label="01" title="Selog" />
+      <Stepper
+        label={day.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+        sub={isToday ? '오늘' : `${day.getMonth() + 1}월 ${day.getDate()}일`}
+        onPrev={() => setDay(addDays(day, -1))}
+        onNext={() => setDay(addDays(day, 1))}
+      />
       <View style={s.chips}>
         <Chip label={me.name || '나'} color={whoColor.me} on={show.me} onPress={() => setShow({ ...show, me: !show.me || !show.partner })} />
         <Chip label={partner?.name || '상대'} color={whoColor.partner} on={show.partner} onPress={() => setShow({ ...show, partner: !show.partner || !show.me })} />
@@ -97,7 +99,7 @@ export default function Selog() {
       {!!error && <T style={{ color: '#d0768a', textAlign: 'center', marginBottom: 8 }}>{error}</T>}
       {hasClips && (
         <View style={{ alignItems: 'center', marginBottom: 12 }}>
-          <Button label="▶ 하루 이어보기" kind="ghost" onPress={playDay} />
+          <Button label="하루 이어보기" kind="ghost" onPress={playDay} />
         </View>
       )}
 
@@ -107,15 +109,15 @@ export default function Selog() {
           const now = isToday && h === nowH;
           return (
             <View key={h} style={[s.slot, now && s.now]}>
-              <Text style={s.hour}>{pad(h)}:00</Text>
+              <Text style={[s.hour, now && { color: colors.ink }]}>{pad(h)}</Text>
               <View style={s.dots}>
                 {here.map(c => (
                   <Pressable key={c.id} onPress={() => open(c)} style={[s.dot, { backgroundColor: c.user_id === me.id ? whoColor.me : whoColor.partner }]}>
-                    <Text style={s.play}>▶</Text>
+                    <Text style={s.play}>{(c.user_id === me.id ? me.name : partner?.name ?? '')?.slice(0, 1)}</Text>
                   </Pressable>
                 ))}
               </View>
-              {now && !here.length && <Text style={s.nowTxt}>지금!</Text>}
+              {now && !here.length && <Text style={s.nowTxt}>now</Text>}
             </View>
           );
         })}
@@ -123,7 +125,7 @@ export default function Selog() {
 
       {isToday && (
         <View style={s.fab}>
-          {busy ? <ActivityIndicator color={colors.pink} /> : <Button label="● 지금 기록하기" kind="pink" onPress={record} />}
+          {busy ? <ActivityIndicator color={colors.ink} /> : <Button label="지금, 이 순간 남기기" kind="pink" onPress={record} />}
         </View>
       )}
 
@@ -149,34 +151,27 @@ function Player({ url, canDelete, onClose, onDelete }: { url: string; canDelete:
   const player = useVideoPlayer(url, p => { p.loop = true; p.play(); });
   const [confirm, setConfirm] = useState(false);
   return (
-    <View style={s.backdrop}>
-      <View style={s.sheet}>
-        <VideoView player={player} style={s.video} contentFit="cover" nativeControls={false} />
-        <View style={s.row}>
-          {canDelete && <Button label={confirm ? '정말 지울까요?' : '삭제'} kind="ghost" onPress={() => (confirm ? onDelete() : setConfirm(true))} />}
-          <Button label="닫기" onPress={onClose} />
-        </View>
+    <Sheet>
+      <VideoView player={player} style={s.video} contentFit="cover" nativeControls={false} />
+      <View style={s.row}>
+        {canDelete && <Button label={confirm ? '정말 지울까요?' : '지우기'} kind="ghost" onPress={() => (confirm ? onDelete() : setConfirm(true))} />}
+        <Button label="닫기" onPress={onClose} />
       </View>
-    </View>
+    </Sheet>
   );
 }
 
 const s = StyleSheet.create({
-  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, marginBottom: 12 },
-  navBtn: { ...sticker, shadowOffset: { width: 0, height: 2 }, width: 34, height: 34, borderRadius: 17, backgroundColor: colors.butter, alignItems: 'center', justifyContent: 'center' },
-  navTxt: { fontSize: 20, color: colors.ink },
-  chips: { flexDirection: 'row', gap: 8, justifyContent: 'center', marginBottom: 14 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 120 },
-  slot: { width: '23%', flexGrow: 1, aspectRatio: 3 / 4, borderRadius: 18, borderWidth: 2, borderColor: colors.stoneDot, backgroundColor: 'rgba(255,255,255,0.75)', padding: 6, justifyContent: 'space-between' },
-  now: { borderStyle: 'dashed', borderColor: colors.ink, backgroundColor: colors.butter },
-  hour: { fontFamily: fonts.body, fontSize: 11, color: colors.inkSoft },
-  dots: { flexDirection: 'row', gap: 4, flexWrap: 'wrap' },
-  dot: { borderWidth: 2, borderColor: colors.ink, width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  play: { color: colors.ink, fontSize: 10 },
-  nowTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.ink, textAlign: 'center' },
-  fab: { position: 'absolute', bottom: 24, alignSelf: 'center' },
-  backdrop: { flex: 1, backgroundColor: 'rgba(90,80,70,0.35)', justifyContent: 'flex-end' },
-  sheet: { ...sticker, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: colors.stone, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 16, paddingBottom: 36, gap: 12, width: '100%', maxWidth: 480, alignSelf: 'center' },
-  video: { width: '100%', aspectRatio: 3 / 4, borderRadius: 24, borderWidth: 2, borderColor: colors.ink, overflow: 'hidden', backgroundColor: '#000' },
+  chips: { flexDirection: 'row', gap: 8, justifyContent: 'center', marginBottom: 16 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 130 },
+  slot: { width: '23%', flexGrow: 1, aspectRatio: 3 / 4, borderRadius: 40, borderWidth: 1, borderColor: colors.line, backgroundColor: 'rgba(255,255,255,0.55)', paddingVertical: 10, alignItems: 'center', justifyContent: 'space-between' },
+  now: { borderColor: colors.aqua, backgroundColor: colors.aquaSoft },
+  hour: { fontFamily: fonts.displayItalic, fontSize: 15, color: colors.inkSoft },
+  dots: { flexDirection: 'row', gap: 4, flexWrap: 'wrap', justifyContent: 'center' },
+  dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  play: { fontFamily: fonts.body, color: colors.ink, fontSize: 12 },
+  nowTxt: { fontFamily: fonts.displayItalic, fontSize: 14, color: colors.ink },
+  fab: { position: 'absolute', bottom: 28, alignSelf: 'center' },
+  video: { width: '100%', aspectRatio: 3 / 4, borderRadius: 28, overflow: 'hidden', backgroundColor: '#000' },
   row: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
 });
