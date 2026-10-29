@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 
 import { addDays, fromYmd, pad, ymd } from '@/lib/date';
-import { colors, fonts, sticker } from '@/lib/theme';
+import { colors, fonts } from '@/lib/theme';
 
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -62,15 +62,15 @@ export function TimePicker({ label, value, onChange }: { label: string; value: s
 }
 
 const s = StyleSheet.create({
-  stepper: { ...sticker, shadowOffset: { width: 0, height: 2 }, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.white, borderRadius: 18, paddingVertical: 8, paddingHorizontal: 10 },
-  arrow: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.butter, alignItems: 'center', justifyContent: 'center' },
-  arrowTxt: { fontSize: 20, color: colors.ink },
+  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: colors.ink + '55', paddingVertical: 8 },
+  arrow: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  arrowTxt: { fontFamily: fonts.display, fontSize: 26, color: colors.ink },
   dateTxt: { fontFamily: fonts.body, fontSize: 17, color: colors.ink },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 6 },
-  label: { fontFamily: fonts.body, fontSize: 14, color: colors.inkSoft },
-  clear: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  label: { fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft, letterSpacing: 0.5 },
+  clear: { fontFamily: fonts.displayItalic, fontSize: 13, color: colors.inkSoft },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingVertical: 2 },
-  chip: { borderWidth: 2, borderColor: colors.stoneDot, backgroundColor: colors.white, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 10, minWidth: 44, alignItems: 'center' },
-  on: { borderColor: colors.ink, backgroundColor: colors.lilac },
-  chipTxt: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
+  chip: { borderWidth: 1, borderColor: colors.line, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 10, minWidth: 44, alignItems: 'center' },
+  on: { borderColor: colors.aqua, backgroundColor: colors.aquaSoft },
+  chipTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
 });
