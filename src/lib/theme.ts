@@ -1,38 +1,27 @@
-// whimsy core 팔레트: 사탕 같은 파스텔 + 진한 자두색 외곽선
+// 2uram 팔레트: 돌 질감 위의 크리스탈 딤섬, 90년대 인쇄물, 완두콩 꽃
 export const colors = {
-  stone: '#fdf3ec',
-  stoneDot: '#f4dfe8',
-  bowl: '#fffdfb',
-  broth: '#f6e2a9',
-  noodle: '#fbf0cf',
-  mint: '#9fe0d8',
-  mintSoft: '#d8f5f0',
-  pink: '#ffb8cc',
-  pinkSoft: '#ffe3ec',
-  lilac: '#d6c4ff',
-  lilacSoft: '#efe7ff',
-  butter: '#ffe9a0',
-  sky: '#bfe2ff',
-  ink: '#6b4a5e',
-  inkSoft: '#a98a9c',
+  stone: '#cdc6bd', // 인트로 배경 (회베이지 돌)
+  paper: '#f4f1ec', // 앱 배경 (종이)
+  line: '#ddd6cc', // 가는 선
+  ink: '#3d3935', // 인쇄 글씨
+  inkSoft: '#8b847b',
   white: '#ffffff',
+  aqua: '#8fd3cd', // 크리스탈 딤섬 피
+  aquaSoft: '#d4efe9',
+  petal: '#f2b6c6', // 꽃잎 핑크
+  petalSoft: '#fbe3ea',
+  pea: '#b9d39f', // 완두콩 초록
+  peaSoft: '#e5efd9',
 };
 
 export const fonts = {
-  display: 'CherryBombOne_400Regular',
-  body: 'Jua_400Regular',
+  display: 'Fraunces_300Light', // 영문 로고·제목
+  displayItalic: 'Fraunces_300Light_Italic',
+  body: 'GowunBatang_400Regular', // 한글 본문 (레트로 명조)
+  bodyBold: 'GowunBatang_700Bold',
 };
 
-// 스티커 느낌: 외곽선 + 아래로 밀린 단색 그림자
-export const sticker = {
-  borderWidth: 2,
-  borderColor: colors.ink,
-  shadowColor: colors.ink,
-  shadowOpacity: 1,
-  shadowRadius: 0,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 0,
-} as const;
+// 캘린더·셀로그 태그 색: 나 = 아쿠아, 상대 = 꽃잎 핑크, 함께 = 완두콩 초록
+export const whoColor = { me: colors.aqua, partner: colors.petal, both: colors.pea };
 
-// 캘린더/셀로그 태그 색: 나 = 민트, 상대 = 핑크, 함께 = 라일락
-export const whoColor = { me: colors.mint, partner: colors.pink, both: colors.lilac };
+export const hairline = { borderWidth: 1, borderColor: colors.line } as const;
