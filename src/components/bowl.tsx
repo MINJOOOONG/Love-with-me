@@ -1,75 +1,19 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
-import { colors, sticker } from '@/lib/theme';
+const bowl = require('@/assets/images/intro-bowl.png');
 
-// 인트로 일러스트: 크리스탈 딤섬 누들수프
-function Dimsum({ size, style, delay = 0 }: { size: number; style: object; delay?: number }) {
-  const y = useSharedValue(0);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      y.value = withRepeat(withTiming(-4, { duration: 2000, easing: Easing.inOut(Easing.quad) }), -1, true);
-    }, delay);
-    return () => clearTimeout(t);
-  }, [delay, y]);
-  const anim = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
-  const leaf = size * 0.46;
-  return (
-    <Animated.View style={[{ position: 'absolute', width: size, height: size }, style, anim]}>
-      {/* 네 귀퉁이가 뾰족하게 접힌 크리스탈 피 */}
-      {[0, 90, 180, 270].map(r => (
-        <View key={r} style={[StyleSheet.absoluteFill, { transform: [{ rotate: `${r}deg` }] }]}>
-          <LinearGradient
-            colors={['#c4ece9', colors.mint, '#7cc9c4']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              position: 'absolute', left: size / 2 - leaf * 0.12, top: size / 2 - leaf * 0.12, width: leaf, height: leaf,
-              borderTopRightRadius: leaf * 0.9, borderBottomLeftRadius: leaf * 0.9, borderWidth: 1.5, borderColor: colors.ink + '55', opacity: 0.95,
-            }}
-          />
-        </View>
-      ))}
-      <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
-        <LinearGradient colors={['#d9f4f2', colors.mint]} style={{ width: size * 0.5, height: size * 0.5, borderRadius: size }} />
-      </View>
-      {/* 꽃잎 */}
-      {[0, 72, 144, 216, 288].map(r => (
-        <View key={r} style={[StyleSheet.absoluteFill, { alignItems: 'center', transform: [{ rotate: `${r}deg` }] }]}>
-          <LinearGradient colors={[colors.pinkSoft, colors.pink]} style={{ marginTop: size * 0.2, width: size * 0.2, height: size * 0.3, borderRadius: size * 0.12, opacity: 0.95 }} />
-        </View>
-      ))}
-      <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
-        <View style={{ width: size * 0.13, height: size * 0.13, borderRadius: size, backgroundColor: '#e6fbfa' }} />
-      </View>
-    </Animated.View>
-  );
-}
-
+// 인트로 일러스트: 위에서 내려다본 크리스탈 딤섬 누들수프. 아주 천천히 돌아요.
 export function Bowl({ size }: { size: number }) {
-  const soup = size * 0.66;
-  return (
-    <View style={{ width: size, height: size }}>
-      <View style={[s.bowl, { width: size, height: size, borderRadius: size }]}>
-        <View style={{ width: size * 0.84, height: size * 0.84, borderRadius: size, backgroundColor: '#f1efec', alignItems: 'center', justifyContent: 'center' }}>
-          <LinearGradient colors={['#f3e4bb', colors.broth, '#dcc28a']} start={{ x: 0.3, y: 0.2 }} end={{ x: 0.8, y: 1 }}
-            style={{ width: soup, height: soup, borderRadius: soup, overflow: 'hidden' }}>
-            {Array.from({ length: 14 }).map((_, i) => (
-              <View key={i} style={{ position: 'absolute', left: soup * 0.12 + i * soup * 0.055, top: soup * 0.1, width: 2, height: soup * 0.8, backgroundColor: colors.noodle, opacity: 0.8, transform: [{ rotate: '10deg' }] }} />
-            ))}
-            <Dimsum size={soup * 0.6} style={{ left: soup * 0.02, top: soup * 0.32 }} />
-            <Dimsum size={soup * 0.44} style={{ right: -soup * 0.04, top: -soup * 0.02 }} delay={1000} />
-          </LinearGradient>
-        </View>
-      </View>
-      <LinearGradient colors={['#f5f5f5', '#b9b9b9']} style={[s.spoon, { width: size * 0.5, height: size * 0.05, right: -size * 0.1, top: size * 0.26 }]} />
-    </View>
-  );
+  const t = useSharedValue(0);
+  const fade = useSharedValue(0);
+  useEffect(() => {
+    fade.value = withTiming(1, { duration: 1400, easing: Easing.out(Easing.cubic) });
+    t.value = withRepeat(withTiming(1, { duration: 90000, easing: Easing.linear }), -1, false);
+  }, [fade, t]);
+  const anim = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [{ scale: 0.96 + fade.value * 0.04 }, { rotate: `${t.value * 360}deg` }],
+  }));
+  return <Animated.Image source={bowl} style={[{ width: size, height: size }, anim]} />;
 }
-
-const s = StyleSheet.create({
-  bowl: { ...sticker, borderWidth: 3, shadowOffset: { width: 0, height: 8 }, backgroundColor: colors.bowl, alignItems: 'center', justifyContent: 'center' },
-  spoon: { position: 'absolute', borderRadius: 8, borderWidth: 2, borderColor: colors.ink, transform: [{ rotate: '-32deg' }] },
-});
